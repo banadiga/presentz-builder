@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Presentz Builder</title>
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+  <style type="text/css" class="init">
+    input, label, fieldset {padding: 6px 4px; margin:6px 4px;}
+    label.big-label {float: left; width: 250px;}
+    input.big-input {width: 500px}
+    input.current-time {width: 80px;}
+    fieldset.current-time {width: 200px;display: inline-block;}
+    #slides {height: 120px; position: relative;; overflow:auto;}
+    .float-right {float: right;}
+  </style>
+  <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.2.js"></script>
+  <script type="text/javascript" src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+  <script type="text/javascript" src="http://jqueryvalidation.org/files/dist/jquery.validate.min.js"></script>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
+  <script type="text/javascript" src="http://rawgit.com/codepb/jquery-template/master/jquery-loadTemplate/jquery.loadTemplate-1.4.5.js"></script>
+
+  <script type="text/javascript">
+  // Helpers
+  $(function() {
+    $.urlParam = function(name, url) {
+      if (!url) {
+       url = window.location.href;
+      }
+      var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(url);
+      if (!results) { 
+        return undefined;
+      }
+      return results[1] || undefined;
+    }
+    $.getImgSrc = function(url, slide) {
+      return url + slide + '.jpg';
+    }
+    $.loadTemplate = function(template, data) {
+      var template = $('<div>').loadTemplate(template, data);
+      return $(template.html());
+    }
+  });
+
+  $(function() {
+    console.log('Initialization...');
+    $(document).tooltip({
+      position: {
+        my: "left top",
+        at: "right+5 top-5"
+      }
+    });
+    $('input[type=submit], input[type=reset], input[type=button]').button();
+
+
+    // Init tabs
+    var tabs = $('#tabs');
+    tabs.tabs();
+
+    // Init all forms
+    var forms = $('form');
+    forms.validate();
+    forms.submit(function(event) {
+      if($(this).valid()) {
+        var selected = tabs.tabs('option', 'active');
+        var length = $('.tab').length;
+        if (selected < length) {
+          tabs.tabs({active:selected +1});
+        }
+      }
+      return false;
+    });
+
+    // Init form elements in tab#1
+    $('#video-code').change(function() {
+      $('#smallthumb').attr("src", 'https://i.ytimg.com/vi/' + $(this).val() + '/mqdefault.jpg');
+      swfobject.embedSWF('http://www.youtube.com/v/' + $(this).val() + '?enablejsapi=1&playerapiid=ytplayer&version=3', 'ytapiplayer', '425', '356', '8', null, null, { allowScriptAccess: "always", autoplay: 0 }, { id: "myytplayer" });
+    });
+
+    $('#video-url').change(function() {
+      var v = $.urlParam('v', $(this).val())
+        if (typeof v != "undefined") {
+          $('#video-code').val(v).trigger("change");
+        }
+    });
+
+    $('#slide-url').change(function() {
+      $('#current-slide').trigger("change");
+    });
+
+    $('#current-slide').change(function() {
+      $('#current-slide-img').attr('src', $.getImgSrc($('#slide-url').val(), $('#current-slide').val()));
+    });
+
+    $('#slide-url, #slide-count').change(function() {
+      $('#slides').empty();
+      for (var i = 1; i <= $('#slide-count').val(); i++) {
+        (function(imgNumber) {
+          var src = $.getImgSrc($('#slide-url').val(), imgNumber);
+          var img = $.loadTemplate('#template-img-slide', {src: src});
+          img.click(function() {
+            $('#current-slide').val(imgNumber).trigger("change");
+          });
+          $('#slides').append(img);
+        })(i);
+      }
+    });
+
+    // Init form elements in tab#2
+    $('#current-time').attr('readonly','readonly');
+    $('.scenario').accordion();
+
+    $('#add-current-slide').click(function() {
+      var src = $.getImgSrc($('#slide-url').val(), $('#current-slide').val());
+      var accordion = $.loadTemplate('#template-div-scenario', {src: src, second: $('#current-time').val()});
+      $('div#scenario').append(accordion);
+      $('.scenario').accordion('refresh');
+
+      (function (slide) {
+        var url = slide.find('.url');
+        var second = slide.find('.second');
+        var title = slide.find('.title');
+        var img = slide.find('.pre-view');
+        var scenarioTitle = slide.find('.scenario-title');
+
+        slide.find(".delete").click(function() {
+          var title = $(this).closest('h3');
+          title.next().remove();
+          title.remove();
+        });
+        var scenarioTitleChange = function() {
+          scenarioTitle.text(second.val() + 's : ' + title.val());
+          img.attr('src', url.val());
+        }
+        url.change(scenarioTitleChange);
+        second.change(scenarioTitleChange);
+        title.change(scenarioTitleChange);
+
+        slide.find('input[type=button]').button();
+        scenarioTitleChange();
+        return slide;
+      })(accordion);
+
+      $('.scenario').accordion("option","active", $('.scenario').find("h3").length - 1);
+      $('#current-slide').val(1 + parseInt($('#current-slide').val())).trigger("change");
+    });
+
+    setInterval(function() { 
+      if (typeof ytplayer == "undefined") {
+        return;
+      }
+      var currentTime = ytplayer.getCurrentTime()
+      if (typeof currentTime != "undefined") {
+        $('#current-time').val(Math.round(currentTime));
+      }
+    }, 1000);
+
+    // Init form elements in tab#3
+    $('#json-content').attr('readonly','readonly');
+    $('#tab3-form').submit(function(event) {
+      var slides = '';
+      var lis = $('div#scenario div');
+      for (var i=0; i<lis.length; i++ ) {
+        slides = slides +
+        '        {\n' +
+        '          "url": "' + $(lis[i]).find('.url').val() + '",\n' +
+        '          "time": ' + $(lis[i]).find('.second').val() + ',\n' +
+        '          "title": "' + $(lis[i]).find('.title').val() + '",\n' +
+        '          "_plugin_id": "image"\n' +
+        '        },\n';
+      };
+
+      $('#json-content').val(
+        '{\n' +
+        '  "title": "' + $('#video-title').val() + '",\n' +
+        '  "chapters": [\n' +
+        '    {\n' +
+        '      "video": {\n' +
+        '        "url": "' + $('#video-url').val() + '"\n' +
+        '      },\n' +
+        '      "slides": [\n' +
+        slides +
+        '      ]\n' +
+        '    }\n' +
+        '  ]\n' +
+        '}\n')
+    });
+
+    // Configuration of auto save/load
+    var ids = ['video-title', 'video-url', 'slide-url', 'slide-count', 'video-code', 'current-slide' /* etc */];
+
+    // Display local storage content
+    console.log(localStorage);
+
+    // Restore value from storage
+    (function () {
+      for (var i=0; i < ids.length; i++) {
+        var id = ids[i];
+        var value = localStorage[id];
+        if (typeof value !== 'undefined') {
+          $('#'+id).val(value).trigger("change");
+          console.log('Load '  + id +' = '+ value);
+        }
+      }
+    })();
+
+    // Auto save
+    $('#' + ids.join(', #')).change(function() {
+      localStorage[this.id] = $(this).val();
+      console.log('Save '  + this.id +' = '+ $(this).val());
+    });
+
+    console.log('Initialization DONE!');
+  });
+
+  function onYouTubePlayerReady(playerId) {
+   ytplayer = document.getElementById("myytplayer");
+  }
+  </script>
+
+  <!-- Templates -->
+  <script type="jquery/x-jquery-tmpl" id="template-img-slide">
+    <img width="100" height="100" data-src="src"/>
+  </script>
+
+  <script type="text/x-handlebars-template" id="template-div-scenario">
+    <h3>Slide: <span class="scenario-title"></span> <input class="delete" type="button" value="Delete curent slide"/> <img class="float-right pre-view" width="50" height="50" data-src="src"></h3>
+    <div>
+      <img class="float-right pre-view" width="100" height="100" data-src="src">
+      <label class="big-label">URL:</label>
+      <input class="big-input url" type="text" data-value="src" placeholder="URL of image">
+      <br/>
+      <label class="big-label">Show at (second):</label>
+      <input class="big-input number second" type="text" data-value="second" placeholder="Second of slide">
+      <br/>
+      <label class="big-label">Title:</label>
+      <input class="big-input title" type="text" data-value="title" placeholder="Title of slide">
+    </div>
+  </script>
+
+</head>
+<body>
+<div id="tabs">
+  <ul>
+    <li><a href="#tabs-1">General info</a></li>
+    <li><a href="#tabs-2">Presentz builder</a></li>
+    <li><a href="#tabs-3">Json builder</a></li>
+  </ul>
+  <div id="tabs-1" class="tab">
+    <form id="tab1-form">
+      <img id="smallthumb" class="float-right"/>
+      <input id="video-code" type="hidden">
+      <label for="video-title" class="big-label">Have you choosed a title?:</label>
+      <input id="video-title" type="text" placeholder="Title" class="big-input autofocus required" title="Title of presentation.">
+      <br/>
+      <label for="video-url" class="big-label">Tell me where is video:</label>
+      <input id="video-url" type="text" placeholder="Video URL" class="big-input required  url" title="Path to youtube video.">
+      <br/>
+      <label for="slide-url" class="big-label">Tell me where is slide:</label>
+      <input id="slide-url" type="text" placeholder="Slide URL" class="big-input required url" title="Path to slide(s)">
+      <br/>
+      <label for="slide-count" class="big-label">Tell me count of slide(s):</label>
+      <input id="slide-count" type="text" placeholder="Count of slide(s)" class="big-input required number" title="Count of slide(s).">
+      <br/>
+      <input type="reset" value="Reset!"><input type="submit" value="Save!">
+    </form>
+  </div>
+  <div id="tabs-2" class="tab">
+    <form id="tab2-form">
+<div id="ytapiplayer">
+    You need Flash player 8+ and JavaScript enabled to view this video.
+  </div>
+<!--
+      <iframe class="youtube-player" id="player" width="640" height="390" src="" frameborder="0" allowfullscreen></iframe> -->
+      <img id="current-slide-img" width="640" height="390"/>
+      <fieldset class="current-time">
+        <label for="current-time">Video currenttime:</label>
+        <br/>
+        <input id="current-time" class="current-time" type="text" value="0">
+        <input id="add-current-slide" type="button" value="ADD">
+      </fieldset>
+      <input id="current-slide" type="hidden" value="1">
+      <br/>
+      <div id="slides"></div>
+      <br/>
+      <div id="scenario" class="scenario"></div>
+      <br/>
+      <input type="submit" value="Go to json.">
+    </form>
+  </div>
+  <div id="tabs-3" class="tab">
+    <form id="tab3-form">
+      <input type="submit" value="Re generate json!">
+      <br/>
+      <textarea id="json-content" rows="30" cols="90"></textarea>
+    </form>
+  </div>
+</div>
+</body>
+</html>

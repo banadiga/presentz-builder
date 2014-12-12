@@ -5,6 +5,7 @@
   <title>Presentz Builder</title>
   <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
   <style type="text/css" class="init">
+    body, div.tabs {min-width: 1200px;}
     input, label, fieldset {padding: 6px 4px; margin:6px 4px;}
     label.big-label {float: left; width: 250px;}
     input.big-input {width: 500px}
@@ -12,6 +13,8 @@
     fieldset.current-time {width: 200px;display: inline-block;}
     #slides {height: 120px; position: relative;; overflow:auto;}
     .float-right {float: right;}
+    div#slides img {margin: 2px; cursor: pointer;}
+    div#slides img.active {border: 1px red solid;}
   </style>
   <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.2.js"></script>
   <script type="text/javascript" src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
@@ -73,7 +76,7 @@
     // Init form elements in tab#1
     $('#video-code').change(function() {
       $('#smallthumb').attr("src", 'https://i.ytimg.com/vi/' + $(this).val() + '/mqdefault.jpg');
-      swfobject.embedSWF('http://www.youtube.com/v/' + $(this).val() + '?enablejsapi=1&playerapiid=ytplayer&version=3', 'ytapiplayer', '425', '356', '8', null, null, { allowScriptAccess: "always", autoplay: 0 }, { id: "myytplayer" });
+      swfobject.embedSWF('http://www.youtube.com/v/' + $(this).val() + '?enablejsapi=1&playerapiid=ytplayer&version=3', 'ytapiplayer', '640', '480', '8', null, null, { allowScriptAccess: "always", autoplay: 0 }, { id: "myytplayer" });
     });
 
     $('#video-url').change(function() {
@@ -88,7 +91,9 @@
     });
 
     $('#current-slide').change(function() {
-      $('#current-slide-img').attr('src', $.getImgSrc($('#slide-url').val(), $('#current-slide').val()));
+      $('#current-slide-img').attr('src', $.getImgSrc($('#slide-url').val(), $(this).val()));
+      $('div#slides img.active').removeClass('active');
+      $('div#slides img#img-' + $(this).val()).addClass('active');
     });
 
     $('#slide-url, #slide-count').change(function() {
@@ -96,7 +101,7 @@
       for (var i = 1; i <= $('#slide-count').val(); i++) {
         (function(imgNumber) {
           var src = $.getImgSrc($('#slide-url').val(), imgNumber);
-          var img = $.loadTemplate('#template-img-slide', {src: src});
+          var img = $.loadTemplate('#template-img-slide', {'imgNumber': 'img-' + imgNumber, 'src': src});
           img.click(function() {
             $('#current-slide').val(imgNumber).trigger("change");
           });
@@ -218,14 +223,14 @@
   </script>
 
   <!-- Templates -->
-  <script type="jquery/x-jquery-tmpl" id="template-img-slide">
-    <img width="100" height="100" data-src="src"/>
+  <script type="text/x-jquery-tmpl" id="template-img-slide">
+    <img height="100" data-src="src" data-id="imgNumber"/>
   </script>
 
   <script type="text/x-handlebars-template" id="template-div-scenario">
-    <h3>Slide: <span class="scenario-title"></span> <input class="delete" type="button" value="Delete curent slide"/> <img class="float-right pre-view" width="50" height="50" data-src="src"></h3>
+    <h3>Slide: <span class="scenario-title"></span> <input class="delete" type="button" value="Delete curent slide"/> <img class="float-right pre-view" height="50" data-src="src"></h3>
     <div>
-      <img class="float-right pre-view" width="100" height="100" data-src="src">
+      <img class="float-right pre-view" height="140" data-src="src">
       <label class="big-label">URL:</label>
       <input class="big-input url" type="text" data-value="src" placeholder="URL of image">
       <br/>
@@ -266,12 +271,9 @@
   </div>
   <div id="tabs-2" class="tab">
     <form id="tab2-form">
-<div id="ytapiplayer">
-    You need Flash player 8+ and JavaScript enabled to view this video.
-  </div>
-<!--
-      <iframe class="youtube-player" id="player" width="640" height="390" src="" frameborder="0" allowfullscreen></iframe> -->
-      <img id="current-slide-img" width="640" height="390"/>
+      <div id="ytapiplayer">You need Flash player 8+ and JavaScript enabled to view this video.</div>
+      <img id="current-slide-img" width="640"/>
+      <br/>
       <fieldset class="current-time">
         <label for="current-time">Video currenttime:</label>
         <br/>

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <title>Presentz Builder</title>
   <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
-  <style type="text/css" class="init">
+  <style type="text/css">
     body, div.tabs {min-width: 1200px;}
     input, label, fieldset {padding: 6px 4px; margin:6px 4px;}
     label.big-label {float: left; width: 250px;}
@@ -228,7 +228,7 @@
   </script>
 
   <script type="text/x-handlebars-template" id="template-div-scenario">
-    <h3>Slide: <span class="scenario-title"></span> <input class="delete" type="button" value="Delete curent slide"/> <img class="float-right pre-view" height="50" data-src="src"></h3>
+    <h3>Slide: <span class="scenario-title"></span> <input class="delete" type="button" value="X" title="Delete curent slide" /> <img class="float-right pre-view" height="50" data-src="src"></h3>
     <div>
       <img class="float-right pre-view" height="140" data-src="src">
       <label class="big-label">URL:</label>
@@ -254,16 +254,16 @@
     <form id="tab1-form">
       <img id="smallthumb" class="float-right"/>
       <input id="video-code" type="hidden">
-      <label for="video-title" class="big-label">Have you choosed a title?:</label>
+      <label for="video-title" class="big-label">Presentation title:</label>
       <input id="video-title" type="text" placeholder="Title" class="big-input autofocus required" title="Title of presentation.">
       <br/>
-      <label for="video-url" class="big-label">Tell me where is video:</label>
-      <input id="video-url" type="text" placeholder="Video URL" class="big-input required  url" title="Path to youtube video.">
+      <label for="video-url" class="big-label">Tell me where is youtube video:</label>
+      <input id="video-url" type="text" placeholder="Youtube video location" class="big-input required  url" title="Path to youtube video.">
       <br/>
-      <label for="slide-url" class="big-label">Tell me where is slide:</label>
-      <input id="slide-url" type="text" placeholder="Slide URL" class="big-input required url" title="Path to slide(s)">
+      <label for="slide-url" class="big-label">Tell me where is slides:</label>
+      <input id="slide-url" type="text" placeholder="Slides location" class="big-input required url" title="Path to slide(s)">
       <br/>
-      <label for="slide-count" class="big-label">Tell me count of slide(s):</label>
+      <label for="slide-count" class="big-label">Number of slides:</label>
       <input id="slide-count" type="text" placeholder="Count of slide(s)" class="big-input required number" title="Count of slide(s).">
       <br/>
       <input type="reset" value="Reset!"><input type="submit" value="Save!">
@@ -275,7 +275,7 @@
       <img id="current-slide-img" width="640"/>
       <br/>
       <fieldset class="current-time">
-        <label for="current-time">Video currenttime:</label>
+        <label for="current-time">Current video time:</label>
         <br/>
         <input id="current-time" class="current-time" type="text" value="0">
         <input id="add-current-slide" type="button" value="ADD">

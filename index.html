@@ -11,7 +11,8 @@
     input.big-input {width: 500px}
     input.current-time {width: 80px;}
     fieldset.current-time {width: 200px;display: inline-block;}
-    #slides {height: 120px; position: relative;; overflow:auto;}
+    .builder {height: 320px;}
+    #slides {width: 160px;float: right; height: 320px; position: relative; overflow:auto;}
     .float-right {float: right;}
     div#slides img {margin: 2px; cursor: pointer;}
     div#slides img.active {border: 1px red solid;}
@@ -21,6 +22,8 @@
   <script type="text/javascript" src="http://jqueryvalidation.org/files/dist/jquery.validate.min.js"></script>
   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
   <script type="text/javascript" src="http://rawgit.com/codepb/jquery-template/master/jquery-loadTemplate/jquery.loadTemplate-1.4.5.js"></script>
+
+  <script type="text/javascript" src="http://rawgit.com/realdanielbyrne/HoyKeys/master/hotKeys.js"></script>
 
   <script type="text/javascript">
   // Helpers
@@ -76,7 +79,7 @@
     // Init form elements in tab#1
     $('#video-code').change(function() {
       $('#smallthumb').attr("src", 'https://i.ytimg.com/vi/' + $(this).val() + '/mqdefault.jpg');
-      swfobject.embedSWF('http://www.youtube.com/v/' + $(this).val() + '?enablejsapi=1&playerapiid=ytplayer&version=3', 'ytapiplayer', '640', '480', '8', null, null, { allowScriptAccess: "always", autoplay: 0 }, { id: "myytplayer" });
+      swfobject.embedSWF('http://www.youtube.com/v/' + $(this).val() + '?enablejsapi=1&playerapiid=ytplayer&version=3', 'ytapiplayer', '320', '240', '8', null, null, { allowScriptAccess: "always", autoplay: 0 }, { id: "myytplayer" });
     });
 
     $('#video-url').change(function() {
@@ -114,10 +117,14 @@
     $('#current-time').attr('readonly','readonly');
     $('.scenario').accordion();
 
+    $(document).hotKey({ key: 'a', modifier: 'alt' }, function() {
+      $('#add-current-slide').click();
+    });
+
     $('#add-current-slide').click(function() {
       var src = $.getImgSrc($('#slide-url').val(), $('#current-slide').val());
       var accordion = $.loadTemplate('#template-div-scenario', {src: src, second: $('#current-time').val()});
-      $('div#scenario').append(accordion);
+      $('div#scenario').prepend(accordion);
       $('.scenario').accordion('refresh');
 
       (function (slide) {
@@ -145,7 +152,7 @@
         return slide;
       })(accordion);
 
-      $('.scenario').accordion("option","active", $('.scenario').find("h3").length - 1);
+      $('.scenario').accordion("option","active", 0);
       $('#current-slide').val(1 + parseInt($('#current-slide').val())).trigger("change");
     });
 
@@ -271,18 +278,18 @@
   </div>
   <div id="tabs-2" class="tab">
     <form id="tab2-form">
-      <div id="ytapiplayer">You need Flash player 8+ and JavaScript enabled to view this video.</div>
-      <img id="current-slide-img" width="640"/>
-      <br/>
-      <fieldset class="current-time">
-        <label for="current-time">Current video time:</label>
-        <br/>
-        <input id="current-time" class="current-time" type="text" value="0">
-        <input id="add-current-slide" type="button" value="ADD">
-      </fieldset>
-      <input id="current-slide" type="hidden" value="1">
-      <br/>
-      <div id="slides"></div>
+      <div class="builder">
+        <div id="slides"></div>
+        <div id="ytapiplayer">You need Flash player 8+ and JavaScript enabled to view this video.</div>
+        <fieldset class="current-time">
+          <label for="current-time">Current video time:</label>
+          <br/>
+          <input id="current-time" class="current-time" type="text" value="0">
+          <input id="add-current-slide" type="button" value="ADD" title="Alt+a">
+        </fieldset>
+        <input id="current-slide" type="hidden" value="1">
+        <img id="current-slide-img" width="320"/>
+      </div>
       <br/>
       <div id="scenario" class="scenario"></div>
       <br/>
